@@ -98,6 +98,13 @@ class CustomerController extends Controller
                 'first_name' => $pesanan->nama,
                 // Bisa tambah email/nomor telepon jika mau struk ke email customer
             ],
+            // Aktifkan semua metode pembayaran umum: QRIS, VA, e-wallet, kartu kredit, dll.
+            'enabled_payments' => [
+                'credit_card',
+                'bca_va', 'bni_va', 'bri_va', 'permata_va', 'other_va',
+                'gopay', 'shopeepay', 'qris',
+                'indomaret', 'alfamart',
+            ],
         ];
 
         // 5. Minta Token Snap ke Midtrans
@@ -114,6 +121,21 @@ class CustomerController extends Controller
             return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
         }
     
+    }
+
+    // AJAX: Cek status terkini sebuah pesanan berdasarkan ID
+    public function cekStatusPesanan($id)
+    {
+        $pesanan = Pesanan::find($id);
+
+        if (!$pesanan) {
+            return response()->json(['status' => 'error', 'message' => 'Pesanan tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'status'      => 'success',
+            'status_bayar' => $pesanan->status_bayar,
+        ]);
     }
 
     // AJAX: Hapus riwayat pesanan dari session browser (HANYA DARI FRONTEND/SESSION)

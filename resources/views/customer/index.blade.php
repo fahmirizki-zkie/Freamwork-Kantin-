@@ -332,7 +332,7 @@
                                                     @elseif($order->status_bayar == 2)
                                                         <span class="badge bg-danger rounded-pill px-3 py-2"><i class="bi bi-x-circle me-1"></i>Batal</span>
                                                     @else
-                                                        <span class="badge bg-warning text-dark rounded-pill px-3 py-2"><i class="bi bi-hourglass-split me-1"></i>Menunggu</span>
+                                                        <span class="badge bg-warning text-dark rounded-pill px-3 py-2" id="badge-status-{{ $order->id }}"><i class="bi bi-hourglass-split me-1"></i>Menunggu</span>
                                                     @endif
                                                 </div>
                                             </div>
@@ -361,6 +361,19 @@
                                                             <td colspan="2" class="text-end fw-bold pt-3 pb-0 text-secondary">Total Pembayaran</td>
                                                             <td class="text-end fw-bold text-primary pt-3 pb-0 fs-5">Rp {{ number_format($order->total, 0, ',', '.') }}</td>
                                                         </tr>
+                                                        @if($order->status_bayar == 0)
+                                                        <tr>
+                                                            <td colspan="3" class="text-end pt-2 pb-0">
+                                                                <button
+                                                                    id="btn-cek-{{ $order->id }}"
+                                                                    class="btn btn-sm btn-outline-warning rounded-pill px-3"
+                                                                    onclick="cekStatusPesanan({{ $order->id }})"
+                                                                >
+                                                                    <i class="bi bi-arrow-clockwise me-1"></i>Perbarui Status
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        @endif
                                                     </tfoot>
                                                 </table>
                                             </div>
@@ -738,6 +751,61 @@
                       Swal.fire('Error', 'Terjadi kesalahan koneksi atau URL endpoint', 'error');
                   });
               }
+          });
+      }
+
+      function cekStatusPesanan(orderId) {
+          const btn = document.getElementById('btn-cek-' + orderId);
+          const badge = document.getElementById('badge-status-' + orderId);
+          const originalHtml = btn.innerHTML;
+
+          btn.disabled = true;
+          btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Memeriksa...';
+
+          fetch(`/pesanan/${orderId}/status`, {
+              headers: { 'Accept': 'application/json' }
+          })
+          .then(response => response.json())
+          .then(data => {
+              if (data.status === 'success') {
+                  if (data.status_bayar == 1) {
+                      // Lunas — perbarui badge dan sembunyikan tombol
+                      if (badge) {
+                          badge.className = 'badge bg-success rounded-pill px-3 py-2';
+                          badge.innerHTML = '<i class="bi bi-check-circle me-1"></i>Lunas';
+                      }
+                      btn.style.display = 'none';
+                      Swal.fire({
+                          icon: 'success',
+                          title: 'Pembayaran Terkonfirmasi!',
+                          text: 'Pesanan #' + orderId + ' sudah berstatus Lunas.',
+                          confirmButtonColor: '#0F172A'
+                      });
+                  } else if (data.status_bayar == 2) {
+                      // Dibatalkan
+                      if (badge) {
+                          badge.className = 'badge bg-danger rounded-pill px-3 py-2';
+                          badge.innerHTML = '<i class="bi bi-x-circle me-1"></i>Batal';
+                      }
+                      btn.style.display = 'none';
+                      Swal.fire('Info', 'Pesanan ini telah dibatalkan atau kadaluarsa.', 'warning');
+                  } else {
+                      // Masih pending
+                      Swal.fire('Menunggu', 'Pembayaran untuk pesanan ini masih belum diterima. Silakan selesaikan pembayaran Anda.', 'info');
+                      btn.disabled = false;
+                      btn.innerHTML = originalHtml;
+                  }
+              } else {
+                  Swal.fire('Error', 'Gagal memeriksa status pesanan.', 'error');
+                  btn.disabled = false;
+                  btn.innerHTML = originalHtml;
+              }
+          })
+          .catch(err => {
+              console.error(err);
+              Swal.fire('Error', 'Terjadi kesalahan koneksi.', 'error');
+              btn.disabled = false;
+              btn.innerHTML = originalHtml;
           });
       }
     </script>

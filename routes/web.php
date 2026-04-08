@@ -128,5 +128,8 @@ Route::domain('localhost')->group(function () {
     
     // AJAX: hapus riwayat pesanan session
     Route::post('/hapus-riwayat', [CustomerController::class, 'hapusRiwayat']);
+
+    // AJAX: cek status terkini sebuah pesanan (untuk tombol "Perbarui Status")
+    Route::get('/pesanan/{id}/status', [CustomerController::class, 'cekStatusPesanan']);
 });
 
