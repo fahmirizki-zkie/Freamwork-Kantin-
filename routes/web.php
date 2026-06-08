@@ -18,6 +18,12 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\VendorMenuController;
 use App\Http\Controllers\PaymentController;
 
+// Google OAuth Routes (global, tidak dibatasi domain)
+Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
+Route::get('/verify-otp', [GoogleAuthController::class, 'showOtpForm']);
+Route::post('/verify-otp', [GoogleAuthController::class, 'verifyOtp']);
+
 // ==========================================
 // 1. DOMAIN VENDOR (http://vendor.localhost:8000)
 // ==========================================
@@ -27,12 +33,7 @@ Route::domain('vendor.localhost')->group(function () {
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-// Google OAuth Routes
-Route::get('/auth/google', [GoogleAuthController::class, 'redirectToGoogle']);
-Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleCallback']);
-Route::get('/verify-otp', [GoogleAuthController::class, 'showOtpForm']);
-Route::post('/verify-otp', [GoogleAuthController::class, 'verifyOtp']);
-
+Route::get('/auth/vendor-handoff', [GoogleAuthController::class, 'vendorHandoff'])->name('vendor.auth.handoff');
 
 // Protected Routes (Require Authentication)
 Route::middleware(['auth'])->group(function () {

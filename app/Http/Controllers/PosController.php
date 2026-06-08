@@ -18,6 +18,7 @@ class PosController extends Controller
     public function cariBarang($kode)
     {
         $barang = DB::table('barang')
+                    ->select('id_barang', DB::raw('nama_barang as nama'), 'harga')
                     ->where('id_barang', $kode)
                     ->first(); // ambil 1 data saja
 

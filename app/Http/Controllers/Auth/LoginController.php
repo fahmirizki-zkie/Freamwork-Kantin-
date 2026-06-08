@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class LoginController extends Controller
@@ -27,14 +29,27 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
+        $email = Str::lower(trim((string) $request->input('email')));
+        $password = (string) $request->input('password');
+
+        $user = User::query()
+            ->whereRaw('LOWER(email) = ?', [$email])
+            ->first();
+
+        if ($user && Auth::attempt(['email' => $user->email, 'password' => $password], $request->filled('remember'))) {
             $request->session()->regenerate();
 
             return redirect()->intended('/');
         }
 
+        $errorMessage = __('The provided credentials do not match our records.');
+
+        if ($user && !empty($user->id_google)) {
+            $errorMessage = 'Password tidak cocok. Bisa juga login lewat tombol Google.';
+        }
+
         throw ValidationException::withMessages([
-            'email' => __('The provided credentials do not match our records.'),
+            'email' => $errorMessage,
         ]);
     }
 

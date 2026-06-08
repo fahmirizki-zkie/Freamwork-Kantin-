@@ -34,7 +34,7 @@
                                 onchange="getKotaAjax(this.value)">
                             <option value="0">— Pilih Provinsi —</option>
                             @foreach ($provinsi as $p)
-                                <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                <option value="{{ $p['id'] }}">{{ $p['name'] }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -76,7 +76,7 @@
                                 onchange="getKotaAxios(this.value)">
                             <option value="0">— Pilih Provinsi —</option>
                             @foreach ($provinsi as $p)
-                                <option value="{{ $p->id }}">{{ $p->name }}</option>
+                                <option value="{{ $p['id'] }}">{{ $p['name'] }}</option>
                             @endforeach
                         </select>
                     </div>

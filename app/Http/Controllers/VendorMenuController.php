@@ -28,15 +28,29 @@ class VendorMenuController extends Controller
 
         // Validasi input
         $request->validate([
-            'nama_menu' => 'required',
-            'harga' => 'required|numeric'
+            'nama_menu' => 'required|string|max:255',
+            'harga' => 'required|numeric|min:0',
+            'path_gambar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        $pathGambar = null;
+        if ($request->hasFile('path_gambar')) {
+            $destinationPath = public_path('uploads/menu');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0775, true);
+            }
+
+            $file = $request->file('path_gambar');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $file->move($destinationPath, $fileName);
+            $pathGambar = 'uploads/menu/' . $fileName;
+        }
 
         Menu::create([
             'vendor_id' => $vendorId,
             'nama_menu' => $request->nama_menu,
             'harga' => $request->harga,
-            'path_gambar' => 'default.jpg' // Default sementara statis
+            'path_gambar' => $pathGambar,
         ]);
 
         return redirect()->route('vendor.menu.index')->with('success', 'Menu ditambahkan!');
@@ -45,16 +59,43 @@ class VendorMenuController extends Controller
     public function update(Request $request, $id)
     {
         $menu = Menu::findOrFail($id);
-        $menu->update([
-            'nama_menu' => $request->nama_menu,
-            'harga' => $request->harga
+
+        $request->validate([
+            'nama_menu' => 'required|string|max:255',
+            'harga' => 'required|numeric|min:0',
+            'path_gambar' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        $data = [
+            'nama_menu' => $request->nama_menu,
+            'harga' => $request->harga,
+        ];
+
+        if ($request->hasFile('path_gambar')) {
+            $destinationPath = public_path('uploads/menu');
+            if (!file_exists($destinationPath)) {
+                mkdir($destinationPath, 0775, true);
+            }
+
+            $file = $request->file('path_gambar');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $file->move($destinationPath, $fileName);
+            $data['path_gambar'] = 'uploads/menu/' . $fileName;
+        }
+
+        $menu->update($data);
+
         return redirect()->route('vendor.menu.index')->with('success', 'Menu diperbarui!');
     }
 
     public function destroy($id)
     {
         $menu = Menu::findOrFail($id);
+
+        if ($menu->path_gambar && file_exists(public_path($menu->path_gambar))) {
+            unlink(public_path($menu->path_gambar));
+        }
+
         $menu->delete();
         return redirect()->route('vendor.menu.index')->with('success', 'Menu dihapus!');
     }
